@@ -1,0 +1,89 @@
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation, Dropout, Flatten, Dense, Conv2D, MaxPooling2D
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import optimizers, initializers, regularizers, metrics
+
+from tensorflow.keras import layers
+from tensorflow.keras import models
+
+model = models.Sequential()
+model.add(Conv2D(32, (3, 3), input_shape=(102,136,3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(128, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(128, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+
+model.add(Dropout(0.25))
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dense(4))
+model.add(Activation('softmax'))
+model.summary()
+model.compile(loss='categorical_crossentropy', optimizer='Adam', metrics=['accuracy'])
+## 'categorical_crossentropy' : 분류해야하는 값이 3개 이상일 때 사용하는 손실함수
+
+train_datagen = ImageDataGenerator(rescale=1./255,  
+                                  rotation_range=40,
+                             width_shift_range=0.2, 
+                             height_shift_range=0.2,
+                             shear_range=0.2, 
+                             zoom_range=0.2,
+                             horizontal_flip=True) 
+
+#테스트 셋은 이미지 부풀리기 과정을 진행하지 않습니다.
+test_datagen = ImageDataGenerator(rescale=1./255) 
+
+
+train_dir = 'data/shoes_dt/train/'
+validation_dir = 'data/shoes_dt/validation/'
+
+train_generator = train_datagen.flow_from_directory(
+       train_dir,   
+       target_size=(102, 136),
+       batch_size=32,
+       class_mode='categorical')
+
+validation_generator = test_datagen.flow_from_directory(
+       validation_dir, 
+       target_size=(102, 136),
+       batch_size=32,
+       class_mode='categorical')
+
+#모델을 실행합니다
+history = model.fit(# fit_generator에서 fit으로 통합됨.
+       train_generator,
+       steps_per_epoch=len(train_generator), #원래 이미지의 개수를 초과하지 않게 변경됨
+       epochs=10,   #적절한 값으로 조절합니다.
+       validation_data=validation_generator,
+       validation_steps=len(validation_generator))
+
+# 테스트 셋의 오차
+y_vloss = history.history['val_loss']
+
+# 학습셋의 오차
+y_loss = history.history['loss']
+
+# 그래프로 표현
+x_len = np.arange(len(y_loss))
+plt.plot(x_len, y_vloss, marker='.', c="red", label='Testset_loss')
+plt.plot(x_len, y_loss, marker='.', c="blue", label='Trainset_loss')
+
+# 그래프에 그리드를 주고 레이블을 표시
+plt.legend(loc='upper right')
+plt.grid()
+plt.xlabel('epoch')
+plt.ylabel('loss')
+plt.show()
