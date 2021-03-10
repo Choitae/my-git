@@ -1,0 +1,13 @@
+select bookname,bookid from book where bookid=10;
+select bookname,bookid from book where bookid between 1 AND 10 ;
+select bookname,bookid from book where bookid<=10 and bookid>=1;
+select bookname,price from book where price > 30000 ;
+select bookname,price from book where price between 5000 AND 20001;
+select * from book ;
+select * from customer;
+select * from orders;
+select sum(saleprice) from orders where custid=2 or custid=4 ;
+select count(orderid) from orders where custid=4  ;
+select count(distinct publisher) from book  where bookid in (select bookid from orders where custid = 4 );
+select book.price, orders.custid from book,orders,customer where (customer.custid=orders.custid and orders.custid=4) ;
+select bookname from book where bookid not in (select bookid from orders where custid = 4 ) ;
